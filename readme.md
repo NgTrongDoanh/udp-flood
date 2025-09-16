@@ -50,7 +50,7 @@ udp-flood/
 
 *   **Clone Repository:**
     ```bash
-    git clone `https://github.com/NgTrongDoanh/udp-flood.git`
+    git clone https://github.com/NgTrongDoanh/udp-flood.git
     cd udp-flood
     ```
 
