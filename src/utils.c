@@ -23,37 +23,35 @@ u_int32_t generate_random_ip_u32() {
 }
 
 u_int32_t get_default_gateway_ip_u32() {
-    FILE *fp;
+    FILE *fp = fopen("/proc/net/route", "r");
+    if (!fp) return 0;
+
     char line[256];
-    char iface[16];
-    u_int32_t dest_ip_hex, gateway_ip_hex;
-    int flags;
-    u_int32_t default_gateway_net_order = 0;
+    char iface[64];
+    unsigned long dest, gateway;
+    
+    fgets(line, sizeof(line), fp);
 
-    fp = fopen("/proc/net/route", "r");
-    if (fp == NULL) {
-        perror("Failed to open /proc/net/route");
-        return 0;
-    }
+    while (fgets(line, sizeof(line), fp)) {
+        if (sscanf(line, "%63s %lx %lx", iface, &dest, &gateway) == 3) {
+            if (dest == 0) { 
+                struct in_addr gw_addr;
+                gw_addr.s_addr = gateway;
+                fclose(fp);
 
-    fgets(line, sizeof(line), fp); 
-
-    while (fgets(line, sizeof(line), fp) != NULL) {
-        if (sscanf(line, "%s %X %X %X", iface, &dest_ip_hex, &gateway_ip_hex, &flags) == 4) {
-            if (dest_ip_hex == 0x0 && (flags & 0x0003) == 0x0003) {
-                default_gateway_net_order = htonl(gateway_ip_hex); 
-                default_gateway_net_order = ( (gateway_ip_hex & 0x000000FF) << 24 ) |
-                                            ( (gateway_ip_hex & 0x0000FF00) << 8  ) |
-                                            ( (gateway_ip_hex & 0x00FF0000) >> 8  ) |
-                                            ( (gateway_ip_hex & 0xFF000000) >> 24 );
-
-                break;
+                char *ip = malloc(INET_ADDRSTRLEN);
+                if (ip) {
+                    strcpy(ip, inet_ntoa(gw_addr));
+                }
+                u_int32_t ip_u32 = inet_addr(ip);
+                free(ip);
+                return ip_u32;
             }
         }
     }
 
     fclose(fp);
-    return default_gateway_net_order;
+    return 0;
 }
 
 int is_valid_ip(const char *ip_str) {

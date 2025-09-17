@@ -31,15 +31,15 @@ void* sender_thread(void* arg) {
     u_int16_t dst_port = (args->isRandomPort) ? (u_int16_t)(1024 + rand() % (65536 - 1024)) : args->dst_port;
     u_int32_t dst_ip_net = args->dst_ip_net;
     
-    printf("Thread %d: Starting to send packets from %s:%d ",
-        args->thread_id, inet_ntoa(*(struct in_addr *)&src_ip_net), src_port);
-    printf("to %s:%d\n",
-        inet_ntoa(*(struct in_addr *)&dst_ip_net), dst_port);
+    // printf("Thread %d: Starting to send packets from %s:%d ",
+    //     args->thread_id, inet_ntoa(*(struct in_addr *)&src_ip_net), src_port);
+    // printf("to %s:%d\n",
+    //     inet_ntoa(*(struct in_addr *)&dst_ip_net), dst_port);
 
     // format string bug when i printf like below =)) Maybe ~~
-    // printf("Thread %d: Starting to send packets from %s:%d to %s:%d\n",
-    //     args->thread_id, inet_ntoa(*(struct in_addr *)&src_ip_net), src_port,
-    //     inet_ntoa(*(struct in_addr *)&dst_ip_net), dst_port);
+    printf("Thread %d: Starting to send packets from %s:%d to %s:%d\n",
+        args->thread_id, inet_ntoa(*(struct in_addr *)&src_ip_net), src_port,
+        inet_ntoa(*(struct in_addr *)&dst_ip_net), dst_port);
 
     int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
     if (sockfd < 0) {
@@ -160,10 +160,11 @@ int main(int argc, char* argv[]) {
     
     default_gateway_ip_net = get_default_gateway_ip_u32(); // fake IP router :)) It's better than random IPs but quite dangerous if you hit real devices
                                                            // Your network can be downtimed :))
+    printf("Default Gateway IP (network order): %s\n", inet_ntoa(*(struct in_addr *)&default_gateway_ip_net));
     if (default_gateway_ip_net == 0) {
         fprintf(stderr, "Warning: Could not determine default gateway IP. Reflective attack mode may not work correctly.\n");
-        default_gateway_ip_net = inet_addr("192.168.1.1"); // Fallback
     }
+    default_gateway_ip_net = inet_addr("192.168.1.1"); // Fallback
 
     if (getuid() != 0) {
         fprintf(stderr, "This program must be run as root.\n");
